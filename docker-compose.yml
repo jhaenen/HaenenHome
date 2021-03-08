@@ -1,0 +1,43 @@
+version: '3'
+services:
+  proxy:
+    image: nginx:1.19-alpine
+    volumes: 
+      - ./config/nginx.conf:/etc/nginx/nginx.conf
+      - ./frontend:/var/www/html
+    ports: 
+      - 2600:80
+    restart: always
+    depends_on: 
+      - backend
+  
+  backend:
+    image: haenenhome/backend
+    build: 
+      context: ./backend
+      target: dev
+    volumes: 
+      - ./backend/:/src
+    command: npm run start:dev
+    ports: 
+      - 2610:3000
+    environment: 
+      NODE_ENV: development
+      DEBUG: nodejs-docker-express:*
+
+  postgres:
+    image: postgres:13-alpine
+    restart: always
+    environment: 
+      POSTGRES_PASSWORD_FILE: "/run/secure/pwd"
+    volumes:
+      - ./db/secure/pwd:/run/secure/pwd:ro
+      - ./db/data:/var/lib/postgresql/data
+    ports:
+      - 2620:5432
+
+  adminer:
+    image: adminer:4
+    restart: always
+    ports: 
+      - 2621:8080
